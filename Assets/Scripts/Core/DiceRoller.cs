@@ -3,11 +3,11 @@ using UnityEngine;
 
 /// <summary>
 /// Realistic physics-based dice roller.
-/// Publishes to GameEventBus — no direct references to any other system.
+/// Publishes to GameEventBus; no direct references to any other system.
 ///
 /// Roll sequence:
 ///   1. Spawn above table with random rotation
-///   2. Apply downward impulse + random torque → physics runs freely
+///   2. Apply downward impulse + random torque so physics runs freely
 ///   3. Wait until velocity drops below threshold (or timeout)
 ///   4. Read which face is up (dot product against World.up)
 ///   5. Smooth-slerp to clean face orientation
@@ -44,6 +44,20 @@ public class DiceRoller : MonoBehaviour
         _rb      = GetComponent<Rigidbody>();
         _restPos = transform.position;
         SetupPhysics();
+    }
+
+    private void OnValidate()
+    {
+        launchHeight = Mathf.Max(0f, launchHeight);
+        launchForce = Mathf.Max(0f, launchForce);
+        torqueMin = Mathf.Max(0f, torqueMin);
+        torqueMax = Mathf.Max(torqueMin, torqueMax);
+        spreadRadius = Mathf.Max(0f, spreadRadius);
+        velocityThreshold = Mathf.Max(0.001f, velocityThreshold);
+        angularThreshold = Mathf.Max(0.001f, angularThreshold);
+        maxWaitTime = Mathf.Max(0.1f, maxWaitTime);
+        snapDuration = Mathf.Max(0.01f, snapDuration);
+        forcedValue = Mathf.Clamp(forcedValue, 1, 6);
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -134,14 +148,14 @@ public class DiceRoller : MonoBehaviour
     {
         Quaternion from = transform.rotation;
         Quaternion to   = FaceRot(face);
-        float e = 2f;
+        float e = 0f;
         while (e < snapDuration)
         {
             e += Time.deltaTime;
             transform.rotation = Quaternion.Slerp(from, to, Mathf.SmoothStep(0,1, e/snapDuration));
             yield return null;
         }
-       transform.rotation = to;
+        transform.rotation = to;
         transform.position = new Vector3(_restPos.x, transform.position.y, _restPos.z);
     }
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Simple dice face builder — attaches pip spheres to each face of the cube.
+/// Simple dice face builder: attaches pip spheres to each face of the cube.
 /// No custom meshes, no textures. Just spheres as dots.
 ///
 /// Face layout: +Y=1  -Y=6  +X=2  -X=5  +Z=3  -Z=4
@@ -12,7 +12,7 @@ public class DiceFaceBuilder : MonoBehaviour
     [SerializeField] private float pipScale  = 0.15f;   // size of each dot sphere
     [SerializeField] private float pipOffset = 0.502f;  // how far from centre (just outside face)
 
-    // Pip positions per face — each Vector2 is local (x,y) offset on that face
+    // Pip positions per face; each Vector2 is local (x,y) offset on that face
     private static readonly Vector2[][] Pips = {
         new[]{ new Vector2( 0,     0)    },                                                                     // 1
         new[]{ new Vector2(-.28f,  .28f), new Vector2( .28f, -.28f) },                                         // 2

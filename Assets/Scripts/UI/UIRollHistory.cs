@@ -21,7 +21,7 @@ public class UIRollHistory : MonoBehaviour
         var sb = new System.Text.StringBuilder("ROLL HISTORY\n");
         var list = new List<int>(_history);
         for (int i = list.Count - 1; i >= 0; i--)
-            sb.AppendLine($"  • {list[i]}");
+            sb.AppendLine($"  - {list[i]}");
 
         if (historyLabel) historyLabel.text = sb.ToString();
     }

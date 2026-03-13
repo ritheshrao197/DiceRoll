@@ -17,6 +17,8 @@ public class UIRollButton : MonoBehaviour
     private void Awake()
     {
         _btn = GetComponent<Button>();
+        if (gameManager == null)
+            Debug.LogError("UIRollButton requires a GameManager reference.", this);
         _btn.onClick.AddListener(() => gameManager?.RequestRoll());
     }
 
@@ -33,11 +35,11 @@ public class UIRollButton : MonoBehaviour
     }
 
     private void OnRollStarted()      => SetState(true);
-    private void OnRollCompleted(int _)=> SetState(false);
+    private void OnRollCompleted(int _) => SetState(false);
 
     private void SetState(bool rolling)
     {
         _btn.interactable = !rolling;
-        if (label) label.text = rolling ? "Rolling…" : "ROLL DICE";
+        if (label) label.text = rolling ? "Rolling..." : "ROLL DICE";
     }
 }

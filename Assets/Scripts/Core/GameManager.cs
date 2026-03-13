@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Coordinates the roll → spirit-card evaluation timing.
+/// Coordinates the roll-to-spirit-card evaluation timing.
 /// Subscribes to EventBus. Only direct reference is to DiceRoller (to call Roll()).
 /// </summary>
 public class GameManager : MonoBehaviour
@@ -30,3 +30,10 @@ public class GameManager : MonoBehaviour
             diceRoller.Roll();
     }
 }
+    private void Awake()
+    {
+        if (diceRoller == null)
+            Debug.LogError("GameManager requires a DiceRoller reference.", this);
+        if (spiritCardManager == null)
+            Debug.LogError("GameManager requires a SpiritCardManager reference.", this);
+    }

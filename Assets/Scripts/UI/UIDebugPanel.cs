@@ -17,6 +17,8 @@ public class UIDebugPanel : MonoBehaviour
         gameObject.SetActive(false);
         return;
 #endif
+        if (diceRoller == null)
+            Debug.LogError("UIDebugPanel requires a DiceRoller reference.", this);
         force3Btn?.onClick.AddListener(() => SetForce(3));
         force6Btn?.onClick.AddListener(() => SetForce(6));
         clearBtn?.onClick.AddListener(Clear);

@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// ScriptableObject defining one Spirit Card.
-/// Right-click in Project → Create → DiceGame → SpiritCard
+/// Right-click in Project > Create > DiceGame > SpiritCard
 /// </summary>
 [CreateAssetMenu(fileName = "SpiritCard_New", menuName = "DiceGame/SpiritCard")]
 public class SpiritCardData : ScriptableObject
@@ -25,6 +25,12 @@ public class SpiritCardData : ScriptableObject
 
     public void ApplyEffect(GameCalculator calc)
     {
+        if (calc == null)
+        {
+            Debug.LogError($"SpiritCardData '{cardName}' cannot apply without a GameCalculator.");
+            return;
+        }
+
         switch (effectType)
         {
             case SpiritEffectType.SetMultiplier: calc.SetMultiplier(effectValue); break;

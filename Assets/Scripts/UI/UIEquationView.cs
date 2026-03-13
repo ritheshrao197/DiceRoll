@@ -3,15 +3,13 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// Displays "Points × Multiplier = Total".
-/// Subscribes to GameEventBus.OnEquationChanged — no polling, no singleton access.
+/// Displays "Points x Multiplier = Total".
+/// Subscribes to GameEventBus.OnEquationChanged with no polling or singleton access.
 /// Animates: count-up tween + bounce scale + gold flash on Total.
-///
-/// FIX: subscribes in Start (not OnEnable) to guarantee scene is fully initialised.
 /// </summary>
 public class UIEquationView : MonoBehaviour
 {
-    [Header("Labels — assign in Inspector")]
+    [Header("Labels - assign in Inspector")]
     [SerializeField] private TMP_Text pointsText;
     [SerializeField] private TMP_Text multiplierText;
     [SerializeField] private TMP_Text totalText;
@@ -27,18 +25,17 @@ public class UIEquationView : MonoBehaviour
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    private void Start()
+    private void Awake()
     {
-        // Subscribe here (not OnEnable) so the bus exists and labels are assigned
-        GameEventBus.OnEquationChanged += OnEquationChanged;
-
-        // Show defaults immediately
+        if (pointsText == null || multiplierText == null || totalText == null)
+            Debug.LogError("UIEquationView requires all TMP label references.", this);
         SetImmediate(pointsText,     0);
         SetImmediate(multiplierText, 10);
         SetImmediate(totalText,      0);
     }
 
-    private void OnDestroy() => GameEventBus.OnEquationChanged -= OnEquationChanged;
+    private void OnEnable() => GameEventBus.OnEquationChanged += OnEquationChanged;
+    private void OnDisable() => GameEventBus.OnEquationChanged -= OnEquationChanged;
 
     // ── Handler ───────────────────────────────────────────────────────────────
 

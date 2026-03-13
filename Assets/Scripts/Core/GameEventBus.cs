@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Static event bus — the single communication channel for the whole game.
+/// Static event bus: the single communication channel for the whole game.
 /// No direct component references needed. Anyone can publish or subscribe.
 ///
 /// Usage:
@@ -12,11 +12,14 @@ using UnityEngine;
 /// </summary>
 public static class GameEventBus
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOnLoad() => ClearAll();
+
     // ── Dice ──────────────────────────────────────────────────────────────────
     /// Fired when the dice starts rolling.
     public static event Action OnRollStarted;
 
-    /// Fired when the dice settles — payload is face value 1–6.
+    /// Fired when the dice settles; payload is face value 1-6.
     public static event Action<int> OnRollCompleted;
 
     // ── Equation ─────────────────────────────────────────────────────────────
@@ -24,10 +27,10 @@ public static class GameEventBus
     public static event Action<int, int, int> OnEquationChanged;  // pts, mult, total
 
     // ── Spirit Cards ─────────────────────────────────────────────────────────
-    /// Fired when a Spirit Card activates — payload is card index (0-based).
+    /// Fired when a Spirit Card activates; payload is card index (0-based).
     public static event Action<int> OnSpiritCardActivated;
 
-    /// Fired when a Spirit Card does NOT activate — payload is card index.
+    /// Fired when a Spirit Card does NOT activate; payload is card index.
     public static event Action<int> OnSpiritCardIdle;
 
     // ── Publishers (called by game systems) ───────────────────────────────────
