@@ -22,6 +22,10 @@ public class UIEquationView : MonoBehaviour
 
     // Track previous values so we only animate what changed
     private int _pts = 0, _mult = 10, _total = 0;
+    private Coroutine _pointsRoutine;
+    private Coroutine _multiplierRoutine;
+    private Coroutine _totalRoutine;
+    private Coroutine _flashRoutine;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -41,9 +45,12 @@ public class UIEquationView : MonoBehaviour
 
     private void OnEquationChanged(int pts, int mult, int total)
     {
-        if (pts   != _pts)   StartCoroutine(Animate(pointsText,     _pts,   pts,   false));
-        if (mult  != _mult)  StartCoroutine(Animate(multiplierText, _mult,  mult,  false));
-        if (total != _total) StartCoroutine(Animate(totalText,      _total, total, true));
+        if (pts != _pts)
+            RestartRoutine(ref _pointsRoutine, Animate(pointsText, _pts, pts, false));
+        if (mult != _mult)
+            RestartRoutine(ref _multiplierRoutine, Animate(multiplierText, _mult, mult, false));
+        if (total != _total)
+            RestartRoutine(ref _totalRoutine, Animate(totalText, _total, total, true));
 
         _pts = pts; _mult = mult; _total = total;
     }
@@ -74,7 +81,8 @@ public class UIEquationView : MonoBehaviour
         label.text = to.ToString();
         label.transform.localScale = baseScale;
 
-        if (doFlash) StartCoroutine(Flash(label));
+        if (doFlash)
+            RestartRoutine(ref _flashRoutine, Flash(label));
     }
 
     private IEnumerator Flash(TMP_Text label)
@@ -94,6 +102,14 @@ public class UIEquationView : MonoBehaviour
     private static void SetImmediate(TMP_Text label, int value)
     {
         if (label != null) label.text = value.ToString();
+    }
+
+    private void RestartRoutine(ref Coroutine routine, IEnumerator enumerator)
+    {
+        if (routine != null)
+            StopCoroutine(routine);
+
+        routine = StartCoroutine(enumerator);
     }
 }
 

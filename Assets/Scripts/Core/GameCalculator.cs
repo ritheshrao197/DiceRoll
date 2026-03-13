@@ -23,8 +23,23 @@ public class GameCalculator : MonoBehaviour
         Recalculate();
     }
 
-    public void SetMultiplier(int value) { Multiplier = value; Recalculate(); }
-    public void AddToPoints(int bonus)   { Points += bonus;    Recalculate(); }
+    public void SetMultiplier(int value)
+    {
+        if (Multiplier == value)
+            return;
+
+        Multiplier = value;
+        Recalculate();
+    }
+
+    public void AddToPoints(int bonus)
+    {
+        if (bonus == 0)
+            return;
+
+        Points += bonus;
+        Recalculate();
+    }
 
     private void Recalculate()
     {

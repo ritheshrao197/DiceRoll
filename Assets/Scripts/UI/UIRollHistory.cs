@@ -8,22 +8,23 @@ public class UIRollHistory : MonoBehaviour
     [SerializeField] private TMP_Text historyLabel;
     [SerializeField] private int      maxEntries = 5;
 
-    private readonly Queue<int> _history = new Queue<int>();
+    private readonly List<int> _history = new List<int>(5);
+    private readonly System.Text.StringBuilder _builder = new System.Text.StringBuilder(64);
 
     private void OnEnable()  => GameEventBus.SubscribeRollCompleted(Add, this);
     private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(Add);
 
     private void Add(int v)
     {
-        if (_history.Count >= maxEntries) _history.Dequeue();
-        _history.Enqueue(v);
+        if (_history.Count >= maxEntries) _history.RemoveAt(0);
+        _history.Add(v);
 
-        var sb = new System.Text.StringBuilder("ROLL HISTORY\n");
-        var list = new List<int>(_history);
-        for (int i = list.Count - 1; i >= 0; i--)
-            sb.AppendLine($"  - {list[i]}");
+        _builder.Clear();
+        _builder.AppendLine("ROLL HISTORY");
+        for (int i = _history.Count - 1; i >= 0; i--)
+            _builder.Append("  - ").Append(_history[i]).AppendLine();
 
-        if (historyLabel) historyLabel.text = sb.ToString();
+        if (historyLabel) historyLabel.text = _builder.ToString();
     }
 }
 

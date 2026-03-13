@@ -9,6 +9,11 @@ using UnityEngine;
 /// </summary>
 public class DiceFaceBuilder : MonoBehaviour
 {
+    private static Shader s_cachedShader;
+    private static Material s_whiteMaterial;
+    private static Material s_darkMaterial;
+    private static Material s_redMaterial;
+
     [SerializeField] private float pipScale  = 0.15f;   // size of each dot sphere
     [SerializeField] private float pipOffset = 0.502f;  // how far from centre (just outside face)
 
@@ -43,17 +48,15 @@ public class DiceFaceBuilder : MonoBehaviour
         for (int i = transform.childCount - 1; i >= 0; i--)
             DestroyImmediate(transform.GetChild(i).gameObject);
 
-        var whiteMat = MakeMat(new Color(0.96f, 0.96f, 0.96f));
-        var darkMat  = MakeMat(new Color(0.08f, 0.08f, 0.08f));
-        var redMat   = MakeMat(new Color(0.85f, 0.08f, 0.08f));
+        EnsureMaterials();
 
         // Apply white to the dice body
         var mr = GetComponent<MeshRenderer>();
-        if (mr) mr.sharedMaterial = whiteMat;
+        if (mr) mr.sharedMaterial = s_whiteMaterial;
 
         foreach (var (val, n, r, u) in Faces)
         {
-            var mat = (val == 1) ? redMat : darkMat;
+            var mat = (val == 1) ? s_redMaterial : s_darkMaterial;
             foreach (var uv in Pips[val - 1])
             {
                 Vector3 pos = n * pipOffset + r * uv.x + u * uv.y;
@@ -70,12 +73,23 @@ public class DiceFaceBuilder : MonoBehaviour
         }
     }
 
+    private static void EnsureMaterials()
+    {
+        if (s_whiteMaterial != null && s_darkMaterial != null && s_redMaterial != null)
+            return;
+
+        s_cachedShader ??= Shader.Find("Universal Render Pipeline/Lit")
+            ?? Shader.Find("Standard")
+            ?? Shader.Find("Diffuse");
+
+        s_whiteMaterial = MakeMat(new Color(0.96f, 0.96f, 0.96f));
+        s_darkMaterial = MakeMat(new Color(0.08f, 0.08f, 0.08f));
+        s_redMaterial = MakeMat(new Color(0.85f, 0.08f, 0.08f));
+    }
+
     private static Material MakeMat(Color c)
     {
-        var s = Shader.Find("Universal Render Pipeline/Lit")
-             ?? Shader.Find("Standard")
-             ?? Shader.Find("Diffuse");
-        return new Material(s) { color = c };
+        return new Material(s_cachedShader) { color = c };
     }
 }
 

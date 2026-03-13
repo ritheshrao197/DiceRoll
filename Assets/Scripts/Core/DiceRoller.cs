@@ -17,6 +17,9 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class DiceRoller : MonoBehaviour
 {
+    private static readonly WaitForSeconds InitialRollDelay = new WaitForSeconds(0.35f);
+    private static readonly WaitForFixedUpdate FixedUpdateYield = new WaitForFixedUpdate();
+
     [Header("Launch")]
     [SerializeField] private float launchHeight   = 2.5f;
     [SerializeField] private float launchForce    = 4f;
@@ -38,10 +41,13 @@ public class DiceRoller : MonoBehaviour
 
     private Rigidbody _rb;
     private Vector3   _restPos;
+    private BoxCollider _boxCollider;
+    private static PhysicsMaterial s_diceMaterial;
 
     private void Awake()
     {
         _rb      = GetComponent<Rigidbody>();
+        _boxCollider = GetComponent<BoxCollider>();
         _restPos = transform.position;
         SetupPhysics();
     }
@@ -99,7 +105,7 @@ public class DiceRoller : MonoBehaviour
         _rb.AddTorque(Random.insideUnitSphere.normalized * Random.Range(torqueMin, torqueMax), ForceMode.VelocityChange);
 
         // 3. Wait until settled
-        yield return new WaitForSeconds(0.35f);   // let it start moving first
+        yield return InitialRollDelay;   // let it start moving first
         float timer = 0f;
         while (timer < maxWaitTime)
         {
@@ -107,7 +113,7 @@ public class DiceRoller : MonoBehaviour
                 _rb.angularVelocity.magnitude < angularThreshold)
                 break;
             timer += Time.fixedDeltaTime;
-            yield return new WaitForFixedUpdate();
+            yield return FixedUpdateYield;
         }
 
         // 4. Freeze & read face
@@ -130,17 +136,22 @@ public class DiceRoller : MonoBehaviour
     // Standard die: +Y=1  -Y=6  +X=2  -X=5  +Z=3  -Z=4
     private int ReadFace()
     {
-        (Vector3 n, int v)[] faces = {
-            ( transform.up,       1), (-transform.up,       6),
-            ( transform.right,    2), (-transform.right,    5),
-            ( transform.forward,  3), (-transform.forward,  4),
-        };
-        float best = float.MinValue; int result = 1;
-        foreach (var (n, v) in faces)
-        {
-            float d = Vector3.Dot(n, Vector3.up);
-            if (d > best) { best = d; result = v; }
-        }
+        float upDot = Vector3.Dot(transform.up, Vector3.up);
+        float downDot = Vector3.Dot(-transform.up, Vector3.up);
+        float rightDot = Vector3.Dot(transform.right, Vector3.up);
+        float leftDot = Vector3.Dot(-transform.right, Vector3.up);
+        float forwardDot = Vector3.Dot(transform.forward, Vector3.up);
+        float backDot = Vector3.Dot(-transform.forward, Vector3.up);
+
+        float best = upDot;
+        int result = 1;
+
+        if (downDot > best) { best = downDot; result = 6; }
+        if (rightDot > best) { best = rightDot; result = 2; }
+        if (leftDot > best) { best = leftDot; result = 5; }
+        if (forwardDot > best) { best = forwardDot; result = 3; }
+        if (backDot > best) { result = 4; }
+
         return result;
     }
 
@@ -179,14 +190,18 @@ public class DiceRoller : MonoBehaviour
         _rb.interpolation          = RigidbodyInterpolation.Interpolate;
         _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
-        var col = GetComponent<BoxCollider>();
-        col.material = new PhysicsMaterial("Dice") {
-            bounciness      = 0.3f,
-            dynamicFriction = 0.5f,
-            staticFriction  = 0.6f,
-            frictionCombine = PhysicsMaterialCombine.Average,
-            bounceCombine   = PhysicsMaterialCombine.Maximum,
-        };
+        if (s_diceMaterial == null)
+        {
+            s_diceMaterial = new PhysicsMaterial("Dice") {
+                bounciness      = 0.3f,
+                dynamicFriction = 0.5f,
+                staticFriction  = 0.6f,
+                frictionCombine = PhysicsMaterialCombine.Average,
+                bounceCombine   = PhysicsMaterialCombine.Maximum,
+            };
+        }
+
+        _boxCollider.material = s_diceMaterial;
     }
 }
 

@@ -13,7 +13,11 @@ using UnityEngine;
 /// </summary>
 public static class GameEventBus
 {
-    private static readonly Dictionary<Delegate, string> SubscriberOwners = new Dictionary<Delegate, string>();
+    private static readonly HashSet<Delegate> RollStartedSubscribers = new HashSet<Delegate>();
+    private static readonly HashSet<Delegate> RollCompletedSubscribers = new HashSet<Delegate>();
+    private static readonly HashSet<Delegate> EquationChangedSubscribers = new HashSet<Delegate>();
+    private static readonly HashSet<Delegate> SpiritCardActivatedSubscribers = new HashSet<Delegate>();
+    private static readonly HashSet<Delegate> SpiritCardIdleSubscribers = new HashSet<Delegate>();
 
     private static Action _onRollStarted;
     private static Action<int> _onRollCompleted;
@@ -25,34 +29,34 @@ public static class GameEventBus
     private static void ResetOnLoad() => ClearAll();
 
     public static void SubscribeRollStarted(Action handler, UnityEngine.Object owner = null) =>
-        AddListener(ref _onRollStarted, handler, nameof(SubscribeRollStarted), owner);
+        AddListener(ref _onRollStarted, handler, RollStartedSubscribers, nameof(SubscribeRollStarted), owner);
 
     public static void UnsubscribeRollStarted(Action handler) =>
-        RemoveListener(ref _onRollStarted, handler);
+        RemoveListener(ref _onRollStarted, handler, RollStartedSubscribers);
 
     public static void SubscribeRollCompleted(Action<int> handler, UnityEngine.Object owner = null) =>
-        AddListener(ref _onRollCompleted, handler, nameof(SubscribeRollCompleted), owner);
+        AddListener(ref _onRollCompleted, handler, RollCompletedSubscribers, nameof(SubscribeRollCompleted), owner);
 
     public static void UnsubscribeRollCompleted(Action<int> handler) =>
-        RemoveListener(ref _onRollCompleted, handler);
+        RemoveListener(ref _onRollCompleted, handler, RollCompletedSubscribers);
 
     public static void SubscribeEquationChanged(Action<int, int, int> handler, UnityEngine.Object owner = null) =>
-        AddListener(ref _onEquationChanged, handler, nameof(SubscribeEquationChanged), owner);
+        AddListener(ref _onEquationChanged, handler, EquationChangedSubscribers, nameof(SubscribeEquationChanged), owner);
 
     public static void UnsubscribeEquationChanged(Action<int, int, int> handler) =>
-        RemoveListener(ref _onEquationChanged, handler);
+        RemoveListener(ref _onEquationChanged, handler, EquationChangedSubscribers);
 
     public static void SubscribeSpiritCardActivated(Action<int> handler, UnityEngine.Object owner = null) =>
-        AddListener(ref _onSpiritCardActivated, handler, nameof(SubscribeSpiritCardActivated), owner);
+        AddListener(ref _onSpiritCardActivated, handler, SpiritCardActivatedSubscribers, nameof(SubscribeSpiritCardActivated), owner);
 
     public static void UnsubscribeSpiritCardActivated(Action<int> handler) =>
-        RemoveListener(ref _onSpiritCardActivated, handler);
+        RemoveListener(ref _onSpiritCardActivated, handler, SpiritCardActivatedSubscribers);
 
     public static void SubscribeSpiritCardIdle(Action<int> handler, UnityEngine.Object owner = null) =>
-        AddListener(ref _onSpiritCardIdle, handler, nameof(SubscribeSpiritCardIdle), owner);
+        AddListener(ref _onSpiritCardIdle, handler, SpiritCardIdleSubscribers, nameof(SubscribeSpiritCardIdle), owner);
 
     public static void UnsubscribeSpiritCardIdle(Action<int> handler) =>
-        RemoveListener(ref _onSpiritCardIdle, handler);
+        RemoveListener(ref _onSpiritCardIdle, handler, SpiritCardIdleSubscribers);
 
     public static void RollStarted()                        => _onRollStarted?.Invoke();
     public static void RollCompleted(int face)              => _onRollCompleted?.Invoke(face);
@@ -68,31 +72,35 @@ public static class GameEventBus
         _onEquationChanged = null;
         _onSpiritCardActivated = null;
         _onSpiritCardIdle = null;
-        SubscriberOwners.Clear();
+        RollStartedSubscribers.Clear();
+        RollCompletedSubscribers.Clear();
+        EquationChangedSubscribers.Clear();
+        SpiritCardActivatedSubscribers.Clear();
+        SpiritCardIdleSubscribers.Clear();
     }
 
-    private static void AddListener<T>(ref T listeners, T handler, string eventName, UnityEngine.Object owner) where T : Delegate
+    private static void AddListener<T>(ref T listeners, T handler, HashSet<Delegate> subscribers, string eventName, UnityEngine.Object owner) where T : Delegate
     {
         if (handler == null)
             return;
 
-        if (listeners != null && Array.Exists(listeners.GetInvocationList(), d => d == (Delegate)(object)handler))
+        var delegateHandler = (Delegate)(object)handler;
+        if (!subscribers.Add(delegateHandler))
         {
             Debug.LogWarning($"GameEventBus duplicate subscription blocked for {DescribeOwner(owner, handler)} on {eventName}.");
             return;
         }
 
         listeners = (T)Delegate.Combine(listeners, handler);
-        SubscriberOwners[(Delegate)(object)handler] = DescribeOwner(owner, handler);
     }
 
-    private static void RemoveListener<T>(ref T listeners, T handler) where T : Delegate
+    private static void RemoveListener<T>(ref T listeners, T handler, HashSet<Delegate> subscribers) where T : Delegate
     {
         if (handler == null)
             return;
 
+        subscribers.Remove((Delegate)(object)handler);
         listeners = (T)Delegate.Remove(listeners, handler);
-        SubscriberOwners.Remove((Delegate)(object)handler);
     }
 
     private static string DescribeOwner(UnityEngine.Object owner, Delegate handler)
