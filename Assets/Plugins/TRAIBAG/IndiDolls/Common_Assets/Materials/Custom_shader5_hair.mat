@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Custom_shader5_hair
+  m_Shader: {fileID: 4800000, guid: 28df355d4856d0747a68f73ff68643fa, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _REFL_ON
+  - _RIM_ON
+  - _SPEC_EXTRA_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissiveTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ReflCube:
+        m_Texture: {fileID: 8900000, guid: e4795ef96b1a42c4da17fd86351c2228, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaMode: 0
+    - _BlinkMax: 1
+    - _BlinkMin: 1
+    - _BlinkPhase: 0
+    - _BlinkSpeed: 0
+    - _BumpScale: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 10
+    - _EmissScrollSpeed: 0
+    - _EmissiveIntensity: 0.86
+    - _GlossMapScale: 1
+    - _Glossiness: 0.579
+    - _GlossyReflections: 1
+    - _HasEmissiveTex: 0
+    - _HasMaskTex: 0
+    - _HasReflCube: 1
+    - _LocalMaxY: 1
+    - _LocalMinY: 0
+    - _Metallic: 0
+    - _Mode: 0
+    - _OcclusionStrength: 1
+    - _Opacity: 0.309
+    - _Parallax: 0.02
+    - _ReflFresnel: 1.11
+    - _ReflIntensity: 3.37
+    - _ReflRoughness: 0.554
+    - _RenderMode: 1
+    - _Rim1AmbientInfluence: 1
+    - _Rim1Intensity: 1.2
+    - _Rim1Power: 2
+    - _Rim1Toggle: 1
+    - _Rim2AmbientInfluence: 1
+    - _Rim2Intensity: 2.81
+    - _Rim2Power: 1.13
+    - _Rim2Toggle: 1
+    - _RimAmbientInfluence: 1
+    - _RimIntensity: 2
+    - _RimPower: 1.8
+    - _RimUseViewSpace: 1
+    - _RingCenter: 0.638
+    - _RingCenterViewInfluence: 0.7
+    - _RingCenterViewMaxShift: 0.12
+    - _RingIntensity: 0.94
+    - _RingSoftness: 0.014
+    - _RingUseLocal: 0
+    - _RingWidth: 0.08
+    - _Smoothness: 0.939
+    - _SmoothnessTextureChannel: 0
+    - _SpecIntensity: 0.3
+    - _SpecMaxPower: 166
+    - _SpecMinPower: 16.5
+    - _SpecularHighlights: 1
+    - _SrcBlend: 5
+    - _UVSec: 0
+    - _VtxTintAStrength: 0
+    - _VtxTintBStrength: 0
+    - _VtxTintGStrength: 0
+    - _VtxTintRStrength: 0
+    - _ZWrite: 0
+    m_Colors:
+    - _Color: {r: 0.6132076, g: 0.4309808, b: 0.43662265, a: 1}
+    - _EmissScrollDir: {r: 1, g: 0, b: 0, a: 0}
+    - _EmissUVScale: {r: 1, g: 1, b: 0, a: 0}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmissiveColor: {r: 0.16470589, g: 0.8117648, b: 1, a: 1}
+    - _MainUV_ST: {r: 1, g: 1, b: 0, a: 0}
+    - _MaskUV_ST: {r: 10, g: 10, b: 0, a: 0}
+    - _ReflColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Rim1Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Rim2Color: {r: 1, g: 0.8582546, b: 0.6556604, a: 1}
+    - _RimColor: {r: 0.7830189, g: 0.71270704, b: 0.6020381, a: 1}
+    - _RingColor: {r: 0.7843138, g: 0.7137255, b: 0.6039216, a: 1}
+    - _SpecExtraColor: {r: 1, g: 1, b: 1, a: 1}
+    - _VtxTintAColor: {r: 1, g: 1, b: 1, a: 1}
+    - _VtxTintBColor: {r: 1, g: 1, b: 1, a: 1}
+    - _VtxTintGColor: {r: 1, g: 1, b: 1, a: 1}
+    - _VtxTintRColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
