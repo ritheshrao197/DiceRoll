@@ -1,170 +1,177 @@
-using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 /// <summary>
-/// Manages the dice roll sequence:
-///   1. Plays a rapid-number spin animation.
-///   2. Eases into the final result.
-///   3. Fires OnRollComplete so GameCalculator can process the result.
-/// Disables the Roll button while rolling to prevent re-entrancy.
+/// Realistic physics-based dice roller.
+/// Publishes to GameEventBus — no direct references to any other system.
+///
+/// Roll sequence:
+///   1. Spawn above table with random rotation
+///   2. Apply downward impulse + random torque → physics runs freely
+///   3. Wait until velocity drops below threshold (or timeout)
+///   4. Read which face is up (dot product against World.up)
+///   5. Smooth-slerp to clean face orientation
+///   6. Publish GameEventBus.RollCompleted(faceValue)
 /// </summary>
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(BoxCollider))]
 public class DiceRoller : MonoBehaviour
 {
-    // ── Events ───────────────────────────────────────────────────────────────
-    public  event Action<int> OnRollComplete;
+    [Header("Launch")]
+    [SerializeField] private float launchHeight   = 2.5f;
+    [SerializeField] private float launchForce    = 4f;
+    [SerializeField] private float torqueMin      = 8f;
+    [SerializeField] private float torqueMax      = 18f;
+    [SerializeField] private float spreadRadius   = 0.3f;
 
-    // ── Inspector ────────────────────────────────────────────────────────────
-    [Header("References")]
-    [SerializeField] private Button            rollButton;
-    [SerializeField] private TextMeshProUGUI   diceFaceLabel;
-    [SerializeField] private RectTransform     diceRect;
-    [SerializeField] private GameCalculator    calculator;
-    [SerializeField] private SpiritCardManager spiritCardManager;
+    [Header("Settle")]
+    [SerializeField] private float velocityThreshold = 0.05f;
+    [SerializeField] private float angularThreshold  = 0.12f;
+    [SerializeField] private float maxWaitTime       = 5f;
+    [SerializeField] private float snapDuration      = 0.2f;
 
-    [Header("Roll Animation")]
-    [SerializeField] private float rollDuration      = 1.2f;
-    [SerializeField] private float fastTickInterval  = 0.07f;
-    [SerializeField] private float slowTickInterval  = 0.25f;
-    [SerializeField] private float shakeStrength     = 12f;
+    [Header("Debug")]
+    [SerializeField] private bool  forceResult  = false;
+    [SerializeField][Range(1,6)] private int forcedValue = 6;
 
-    [Header("Audio")]
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip   rollTickSfx;
-    [SerializeField] private AudioClip   settleSfx;
+    public bool IsRolling { get; private set; }
 
-    // ── Runtime state ────────────────────────────────────────────────────────
-    private bool      _isRolling     = false;
-    private bool      _debugForce    = false;
-    private int       _debugValue    = 6;
-    private Vector3   _diceOriginPos;
-    private Coroutine _rollRoutine;
-
-    // ─────────────────────────────────────────────────────────────────────────
+    private Rigidbody _rb;
+    private Vector3   _restPos;
 
     private void Awake()
     {
-        _diceOriginPos = diceRect != null ? diceRect.anchoredPosition3D : Vector3.zero;
+        _rb      = GetComponent<Rigidbody>();
+        _restPos = transform.position;
+        SetupPhysics();
     }
 
-    private void OnEnable()  => rollButton.onClick.AddListener(BeginRoll);
-    private void OnDisable() => rollButton.onClick.RemoveListener(BeginRoll);
+    // ── Public API ────────────────────────────────────────────────────────────
 
-    /// <summary>Called by the Roll button.</summary>
-    public void BeginRoll()
+    public void Roll()
     {
-        if (_isRolling) return;
-
-        int result = _debugForce
-            ? _debugValue
-            : UnityEngine.Random.Range(1, 7);
-
-        if (_rollRoutine != null) StopCoroutine(_rollRoutine);
-        _rollRoutine = StartCoroutine(RollSequence(result));
+        if (IsRolling) return;
+        StartCoroutine(RollSequence());
     }
 
-    /// <summary>Used by DebugRollPanel to override the next roll result.</summary>
-    public void SetDebugForce(bool active, int value)
+    public void SetDebugForce(bool on, int val)
     {
-        _debugForce = active;
-        _debugValue = Mathf.Clamp(value, 1, 6);
+        Debug.Log($"DiceRoller: SetDebugForce({on}, {val})");
+        forceResult  = on;
+        forcedValue  = Mathf.Clamp(val, 1, 6);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Sequence ──────────────────────────────────────────────────────────────
 
-    private IEnumerator RollSequence(int finalResult)
+    private IEnumerator RollSequence()
     {
-        _isRolling = true;
-        SetRollButtonInteractable(false);
-        spiritCardManager?.ResetAllCards();
+        IsRolling = true;
+        GameEventBus.RollStarted();
 
-        float elapsed   = 0f;
-        float tickTimer = 0f;
+        // 1. Teleport above table, random rotation
+        _rb.isKinematic = true;
+        float sx = Random.Range(-spreadRadius, spreadRadius);
+        float sz = Random.Range(-spreadRadius, spreadRadius);
+        transform.position = _restPos + new Vector3(sx, launchHeight, sz);
+        transform.rotation = Random.rotation;
 
-        while (elapsed < rollDuration)
+        // 2. Release with impulse
+        _rb.isKinematic     = false;
+        _rb.linearVelocity  = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+
+        Vector3 dir = (Vector3.down + new Vector3(Random.Range(-.25f,.25f), 0, Random.Range(-.25f,.25f))).normalized;
+        _rb.AddForce(dir * launchForce, ForceMode.VelocityChange);
+        _rb.AddTorque(Random.insideUnitSphere.normalized * Random.Range(torqueMin, torqueMax), ForceMode.VelocityChange);
+
+        // 3. Wait until settled
+        yield return new WaitForSeconds(0.35f);   // let it start moving first
+        float timer = 0f;
+        while (timer < maxWaitTime)
         {
-            elapsed   += Time.deltaTime;
-            tickTimer += Time.deltaTime;
-
-            float progress     = elapsed / rollDuration;
-            float tickInterval = Mathf.Lerp(fastTickInterval, slowTickInterval, EaseIn(progress));
-
-            if (tickTimer >= tickInterval)
-            {
-                tickTimer = 0f;
-                SetDiceFace(UnityEngine.Random.Range(1, 7));
-                PlayTickSound();
-            }
-
-            float shakeAmt = shakeStrength * (1f - progress) * Mathf.Sin(elapsed * 8f);
-            if (diceRect)
-                diceRect.anchoredPosition3D = _diceOriginPos + new Vector3(shakeAmt, shakeAmt * 0.5f, 0f);
-
-            yield return null;
+            if (_rb.linearVelocity.magnitude < velocityThreshold &&
+                _rb.angularVelocity.magnitude < angularThreshold)
+                break;
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
 
-        if (diceRect) diceRect.anchoredPosition3D = _diceOriginPos;
-        SetDiceFace(finalResult);
-        PlaySettleSound();
+        // 4. Freeze & read face
+        _rb.isKinematic     = true;
+        _rb.linearVelocity  = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
 
-        yield return new WaitForSeconds(0.25f);
-        yield return PunchScale(diceRect, 1.35f, 0.18f);
+        int face = forceResult ? forcedValue : ReadFace();
 
-        calculator.ApplyDiceResult(finalResult);
-        OnRollComplete?.Invoke(finalResult);
+        // 5. Snap to clean orientation
+        yield return SnapToFace(face);
 
-        _isRolling = false;
-        SetRollButtonInteractable(true);
+        // 6. Publish result
+        IsRolling = false;
+        GameEventBus.RollCompleted(face);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // ── Face reading ──────────────────────────────────────────────────────────
 
-    private void SetDiceFace(int value)
+    // Standard die: +Y=1  -Y=6  +X=2  -X=5  +Z=3  -Z=4
+    private int ReadFace()
     {
-        if (diceFaceLabel) diceFaceLabel.text = value.ToString();
-    }
-
-    private void SetRollButtonInteractable(bool state)
-    {
-        if (rollButton) rollButton.interactable = state;
-    }
-
-    private void PlayTickSound()
-    {
-        if (audioSource && rollTickSfx)
-            audioSource.PlayOneShot(rollTickSfx, 0.4f);
-    }
-
-    private void PlaySettleSound()
-    {
-        if (audioSource && settleSfx)
-            audioSource.PlayOneShot(settleSfx);
-    }
-
-    private IEnumerator PunchScale(RectTransform target, float peakScale, float duration)
-    {
-        if (!target) yield break;
-        Vector3 baseScale = target.localScale;
-        float   half      = duration * 0.5f;
-        float   t         = 0f;
-
-        while (t < half)
+        (Vector3 n, int v)[] faces = {
+            ( transform.up,       1), (-transform.up,       6),
+            ( transform.right,    2), (-transform.right,    5),
+            ( transform.forward,  3), (-transform.forward,  4),
+        };
+        float best = float.MinValue; int result = 1;
+        foreach (var (n, v) in faces)
         {
-            t += Time.deltaTime;
-            target.localScale = Vector3.Lerp(baseScale, baseScale * peakScale, t / half);
+            float d = Vector3.Dot(n, Vector3.up);
+            if (d > best) { best = d; result = v; }
+        }
+        return result;
+    }
+
+    private System.Collections.IEnumerator SnapToFace(int face)
+    {
+        Quaternion from = transform.rotation;
+        Quaternion to   = FaceRot(face);
+        float e = 2f;
+        while (e < snapDuration)
+        {
+            e += Time.deltaTime;
+            transform.rotation = Quaternion.Slerp(from, to, Mathf.SmoothStep(0,1, e/snapDuration));
             yield return null;
         }
-        t = 0f;
-        while (t < half)
-        {
-            t += Time.deltaTime;
-            target.localScale = Vector3.Lerp(baseScale * peakScale, baseScale, t / half);
-            yield return null;
-        }
-        target.localScale = baseScale;
+       transform.rotation = to;
+        transform.position = new Vector3(_restPos.x, transform.position.y, _restPos.z);
     }
 
-    private float EaseIn(float t) => t * t;
+    private static Quaternion FaceRot(int f) => f switch {
+        1 => Quaternion.Euler(  0, 0,   0),
+        6 => Quaternion.Euler(180, 0,   0),
+        2 => Quaternion.Euler(  0, 0, 90),
+        5 => Quaternion.Euler(  0, 0,  -90),
+        3 => Quaternion.Euler( 270, 0,   0),
+        4 => Quaternion.Euler(90, 0,   0),
+        _ => Quaternion.identity,
+    };
+
+    // ── Physics setup ─────────────────────────────────────────────────────────
+
+    private void SetupPhysics()
+    {
+        _rb.mass                   = 0.08f;
+        _rb.linearDamping          = 0.05f;
+        _rb.angularDamping         = 0.08f;
+        _rb.interpolation          = RigidbodyInterpolation.Interpolate;
+        _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+        var col = GetComponent<BoxCollider>();
+        col.material = new PhysicsMaterial("Dice") {
+            bounciness      = 0.3f,
+            dynamicFriction = 0.5f,
+            staticFriction  = 0.6f,
+            frictionCombine = PhysicsMaterialCombine.Average,
+            bounceCombine   = PhysicsMaterialCombine.Maximum,
+        };
+    }
 }

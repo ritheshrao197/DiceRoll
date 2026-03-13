@@ -3,149 +3,99 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// Responsible solely for displaying and animating the equation:
-///   Points × Multiplier = Total
+/// Displays "Points × Multiplier = Total".
+/// Subscribes to GameEventBus.OnEquationChanged — no polling, no singleton access.
+/// Animates: count-up tween + bounce scale + gold flash on Total.
 ///
-/// Subscribes to GameCalculator.OnEquationChanged and runs:
-///   - Count-up tween for each number
-///   - Bounce-scale when a value changes
-///   - Color flash on the Total when the equation finalises
+/// FIX: subscribes in Start (not OnEnable) to guarantee scene is fully initialised.
 /// </summary>
 public class UIEquationView : MonoBehaviour
 {
-    [Header("Equation Labels")]
-    [SerializeField] private TextMeshProUGUI pointsLabel;
-    [SerializeField] private TextMeshProUGUI multiplierLabel;
-    [SerializeField] private TextMeshProUGUI totalLabel;
+    [Header("Labels — assign in Inspector")]
+    [SerializeField] private TMP_Text pointsText;
+    [SerializeField] private TMP_Text multiplierText;
+    [SerializeField] private TMP_Text totalText;
 
-    [Header("Operator / Separator Labels (optional)")]
-    [SerializeField] private TextMeshProUGUI timesLabel;   // "×"
-    [SerializeField] private TextMeshProUGUI equalsLabel;  // "="
+    [Header("Animation")]
+    [SerializeField] private float countDuration = 0.4f;
+    [SerializeField] private float bouncePeak    = 1.25f;
+    [SerializeField] private Color flashColor    = new Color(1f, 0.85f, 0.1f);
+    [SerializeField] private float flashDuration = 0.55f;
 
-    [Header("Count-Up Settings")]
-    [Tooltip("Duration of the count-up tween in seconds.")]
-    [SerializeField] private float countUpDuration = 0.55f;
+    // Track previous values so we only animate what changed
+    private int _pts = 0, _mult = 10, _total = 0;
 
-    [Header("Flash Colors")]
-    [SerializeField] private Color normalColor    = Color.white;
-    [SerializeField] private Color changedColor   = new Color(1f, 0.92f, 0.2f, 1f);  // yellow flash
-    [SerializeField] private Color totalFlashColor = new Color(0.3f, 1f, 0.45f, 1f); // green pop
-    [SerializeField] private float flashDuration  = 0.4f;
-
-    // ── Coroutine handles so new values cancel old tweens ────────────────────
-    private Coroutine _pointsRoutine;
-    private Coroutine _multiplierRoutine;
-    private Coroutine _totalRoutine;
-
-    // Cached previous values to detect changes
-    private int _prevPoints     = 0;
-    private int _prevMultiplier = 10;
-    private int _prevTotal      = 0;
-
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private void OnEnable()  => GameCalculator.Instance.OnEquationChanged += HandleEquationChanged;
-    private void OnDisable() => GameCalculator.Instance.OnEquationChanged -= HandleEquationChanged;
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     private void Start()
     {
-        // Set initial display
-        SetLabelImmediate(pointsLabel,     0);
-        SetLabelImmediate(multiplierLabel, 10);
-        SetLabelImmediate(totalLabel,      0);
+        // Subscribe here (not OnEnable) so the bus exists and labels are assigned
+        GameEventBus.OnEquationChanged += OnEquationChanged;
+
+        // Show defaults immediately
+        SetImmediate(pointsText,     0);
+        SetImmediate(multiplierText, 10);
+        SetImmediate(totalText,      0);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    private void OnDestroy() => GameEventBus.OnEquationChanged -= OnEquationChanged;
 
-    private void HandleEquationChanged(int points, int multiplier, int total)
+    // ── Handler ───────────────────────────────────────────────────────────────
+
+    private void OnEquationChanged(int pts, int mult, int total)
     {
-        bool pointsChanged     = points     != _prevPoints;
-        bool multiplierChanged = multiplier != _prevMultiplier;
-        bool totalChanged      = total      != _prevTotal;
+        if (pts   != _pts)   StartCoroutine(Animate(pointsText,     _pts,   pts,   false));
+        if (mult  != _mult)  StartCoroutine(Animate(multiplierText, _mult,  mult,  false));
+        if (total != _total) StartCoroutine(Animate(totalText,      _total, total, true));
 
-        if (pointsChanged)
-        {
-            if (_pointsRoutine != null) StopCoroutine(_pointsRoutine);
-            _pointsRoutine = StartCoroutine(AnimateValue(pointsLabel, _prevPoints, points, changedColor, false));
-        }
-
-        if (multiplierChanged)
-        {
-            if (_multiplierRoutine != null) StopCoroutine(_multiplierRoutine);
-            _multiplierRoutine = StartCoroutine(AnimateValue(multiplierLabel, _prevMultiplier, multiplier, changedColor, false));
-        }
-
-        if (totalChanged)
-        {
-            if (_totalRoutine != null) StopCoroutine(_totalRoutine);
-            // Total gets the special green "result finalised" treatment
-            _totalRoutine = StartCoroutine(AnimateValue(totalLabel, _prevTotal, total, totalFlashColor, true));
-
-            // Brief emphasis on the "=" sign
-            if (equalsLabel) StartCoroutine(FlashLabel(equalsLabel, changedColor, flashDuration));
-        }
-
-        _prevPoints     = points;
-        _prevMultiplier = multiplier;
-        _prevTotal      = total;
+        _pts = pts; _mult = mult; _total = total;
     }
 
-    // ── Animation coroutines ─────────────────────────────────────────────────
+    // ── Animation coroutine ───────────────────────────────────────────────────
 
-    /// <summary>
-    /// Tweens the displayed number from <paramref name="from"/> to <paramref name="to"/>
-    /// with a colour flash and an optional scale punch.
-    /// </summary>
-    private IEnumerator AnimateValue(TextMeshProUGUI label, int from, int to,
-                                     Color flashColor, bool bigPunch)
+    private IEnumerator Animate(TMP_Text label, int from, int to, bool doFlash)
     {
-        if (!label) yield break;
+        if (label == null) yield break;
 
-        RectTransform rect      = label.rectTransform;
-        Vector3       baseScale = rect.localScale;
+        Vector3 baseScale = label.transform.localScale;
+        float   elapsed   = 0f;
 
-        // Colour flash start
-        label.color = flashColor;
-
-        float elapsed = 0f;
-
-        while (elapsed < countUpDuration)
+        while (elapsed < countDuration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / countUpDuration);
+            float t    = Mathf.Clamp01(elapsed / countDuration);
+            float ease = 1f - Mathf.Pow(1f - t, 3f);   // ease-out cubic
 
-            // Count-up: ease-out curve
-            int displayed = Mathf.RoundToInt(Mathf.Lerp(from, to, EaseOut(t)));
-            label.text = displayed.ToString();
+            label.text = Mathf.RoundToInt(Mathf.Lerp(from, to, ease)).ToString();
 
-            // Scale bounce (peaks at 40% of tween, back to 1 by end)
-            float scaleCurve = bigPunch ? 1f + 0.35f * Mathf.Sin(t * Mathf.PI)
-                                        : 1f + 0.18f * Mathf.Sin(t * Mathf.PI);
-            rect.localScale = baseScale * scaleCurve;
-
-            // Colour fades from flashColor → normalColor
-            label.color = Color.Lerp(flashColor, normalColor, t);
-
+            // Bounce scale: peaks at midpoint then returns to normal
+            float s = 1f + (bouncePeak - 1f) * Mathf.Sin(t * Mathf.PI);
+            label.transform.localScale = baseScale * s;
             yield return null;
         }
 
-        label.text  = to.ToString();
-        label.color = normalColor;
-        rect.localScale = baseScale;
+        label.text = to.ToString();
+        label.transform.localScale = baseScale;
+
+        if (doFlash) StartCoroutine(Flash(label));
     }
 
-    private IEnumerator FlashLabel(TextMeshProUGUI label, Color flashColor, float duration)
+    private IEnumerator Flash(TMP_Text label)
     {
-        if (!label) yield break;
-        label.color = flashColor;
-        yield return new WaitForSeconds(duration);
-        label.color = normalColor;
+        if (label == null) yield break;
+        Color original = label.color;
+        float inD  = flashDuration * 0.35f;
+        float outD = flashDuration * 0.65f;
+        float e    = 0f;
+
+        while (e < inD)  { e += Time.deltaTime; label.color = Color.Lerp(original, flashColor, e/inD);  yield return null; }
+        e = 0f;
+        while (e < outD) { e += Time.deltaTime; label.color = Color.Lerp(flashColor, original, e/outD); yield return null; }
+        label.color = original;
     }
 
-    private void SetLabelImmediate(TextMeshProUGUI label, int value)
+    private static void SetImmediate(TMP_Text label, int value)
     {
-        if (label) label.text = value.ToString();
+        if (label != null) label.text = value.ToString();
     }
-
-    private float EaseOut(float t) => 1f - (1f - t) * (1f - t);
 }
