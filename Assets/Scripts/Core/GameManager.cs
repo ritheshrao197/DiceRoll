@@ -11,6 +11,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SpiritCardManager spiritCardManager;
     [SerializeField] private float             spiritCardDelay = 0.5f;
 
+    private void Awake()
+    {
+        if (diceRoller == null)
+            Debug.LogError("GameManager requires a DiceRoller reference.", this);
+        if (spiritCardManager == null)
+            Debug.LogError("GameManager requires a SpiritCardManager reference.", this);
+    }
+
     private void OnEnable()  => GameEventBus.OnRollCompleted += OnRollCompleted;
     private void OnDisable() => GameEventBus.OnRollCompleted -= OnRollCompleted;
 
@@ -30,10 +38,3 @@ public class GameManager : MonoBehaviour
             diceRoller.Roll();
     }
 }
-    private void Awake()
-    {
-        if (diceRoller == null)
-            Debug.LogError("GameManager requires a DiceRoller reference.", this);
-        if (spiritCardManager == null)
-            Debug.LogError("GameManager requires a SpiritCardManager reference.", this);
-    }

@@ -13,7 +13,7 @@ public class SpiritCardData : ScriptableObject
     public string description = "";
 
     [Header("Trigger")]
-    [Tooltip("Dice value that activates this card (1–6). 0 = always triggers.")]
+    [Tooltip("Dice value that activates this card (1-6). 0 = always triggers.")]
     public int triggerOnDiceValue = 6;
 
     [Header("Effect")]
@@ -40,3 +40,4 @@ public class SpiritCardData : ScriptableObject
 }
 
 public enum SpiritEffectType { SetMultiplier, AddToPoints }
+
