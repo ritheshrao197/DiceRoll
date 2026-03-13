@@ -9,13 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 333bbe123a1f62d42a15a10700b71c07, type: 3}
-  m_Name: SpiritCard_b
+  m_Script: {fileID: 11500000, guid: 5887971bbdc62de43a403a0d1c041f37, type: 3}
+  m_Name: SpiritCard_B
   m_EditorClassIdentifier: Assembly-CSharp::SpiritCardData
-  cardName: Spirit Card
-  description: Card description.
-  triggerOnDiceValue: 6
+  cardName: Bonus Points
+  description: 'Roll 3: +10 Points!'
+  triggerOnDiceValue: 3
   effectType: 1
-  effectValue: 2
-  cardAccentColor: {r: 0.17054713, g: 1, b: 0, a: 1}
-  cardArtwork: {fileID: 0}
+  effectValue: 10

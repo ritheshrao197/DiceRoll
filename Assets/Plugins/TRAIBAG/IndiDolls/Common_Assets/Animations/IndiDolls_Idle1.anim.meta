@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 12648a58baa7ad548a7ccd94c54bf81a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 331730
+  packageName: 'IndiDolls : Common Assets / URP'
+  packageVersion: 1.0
+  assetPath: Assets/TRAIBAG/IndiDolls/Common_Assets/Animations/IndiDolls_Idle1.anim
+  uploadId: 787130

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f329c31f187d044489bd7740bdc4a52e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 331730
+  packageName: 'IndiDolls : Common Assets / URP'
+  packageVersion: 1.0
+  assetPath: Assets/TRAIBAG/IndiDolls/Common_Assets/Shader/IndiDolls_sky_shader.shader
+  uploadId: 787130

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 09afbae0f37fff44eb4908ecd8e8b1e6
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 331730
+  packageName: 'IndiDolls : Common Assets / URP'
+  packageVersion: 1.0
+  assetPath: Assets/TRAIBAG/IndiDolls/Common_Assets/Textures/CubeMapLicense.txt
+  uploadId: 787130

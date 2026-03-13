@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 28df355d4856d0747a68f73ff68643fa
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 331730
+  packageName: 'IndiDolls : Common Assets / URP'
+  packageVersion: 1.0
+  assetPath: Assets/TRAIBAG/IndiDolls/Common_Assets/Shader/IndiDolls_hair_shader_urp.shader
+  uploadId: 787130
