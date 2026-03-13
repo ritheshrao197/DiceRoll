@@ -2,14 +2,20 @@ using System.Collections;
 using UnityEngine;
 using TMPro;
 
-/// <summary>Spring-pop number when dice settles. Subscribes to EventBus.</summary>
+/// <summary>Spring-pop number when dice settles. Subscribes to EventManager.</summary>
 public class DiceResultPopup : MonoBehaviour
 {
     [SerializeField] private TMP_Text label;
 
     private void Start()     { if (label) label.alpha = 0f; }
-    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(Show, this);
-    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(Show);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is RollCompletedEvent rollCompletedEvent)
+            Show(rollCompletedEvent.FaceValue);
+    }
 
     private void Show(int v) { StopAllCoroutines(); StartCoroutine(Pop(v)); }
 

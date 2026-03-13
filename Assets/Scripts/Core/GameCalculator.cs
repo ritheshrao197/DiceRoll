@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Owns Points / Multiplier / Total state.
-/// Reads from EventBus, publishes back to EventBus. No direct UI references.
+/// Reads from EventManager, publishes back through EventManager. No direct UI references.
 /// </summary>
 public class GameCalculator : MonoBehaviour
 {
@@ -12,8 +12,14 @@ public class GameCalculator : MonoBehaviour
     public int Multiplier { get; private set; }
     public int Total      { get; private set; }
 
-    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
-    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is RollCompletedEvent rollCompletedEvent)
+            OnRollCompleted(rollCompletedEvent.FaceValue);
+    }
 
     private void OnRollCompleted(int face)
     {
@@ -44,7 +50,7 @@ public class GameCalculator : MonoBehaviour
     private void Recalculate()
     {
         Total = Points * Multiplier;
-        GameEventBus.EquationChanged(Points, Multiplier, Total);
+        EventManager.TriggerEvent(new EquationChangedEvent(Points, Multiplier, Total));
     }
 }
 

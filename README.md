@@ -1,25 +1,27 @@
 # Dice x Multiplier - Spirit Cards
 
-Small Unity prototype built around a physics-driven dice roll, an event bus, and ScriptableObject-powered spirit cards.
+Small Unity prototype built around a physics-driven dice roll, a simple event stream, and ScriptableObject-powered spirit cards.
 
 ## Unity Version
 Unity 6 LTS (`6000.0.x`)
 
 ## Runtime Overview
 - `DiceRoller` launches a 3D die with physics, waits for it to settle, reads the top face, then snaps cleanly to that face.
-- `GameEventBus` is the messaging layer between gameplay, UI, and effects.
+- `EventManager` is the shared event stream for gameplay, UI, and effects.
+- `GameEvent` is the base type for all runtime events.
 - `GameCalculator` owns `Points`, `Multiplier`, and `Total`.
 - `GameManager` delays spirit card evaluation after each completed roll.
 - `SpiritCardManager` evaluates the configured `SpiritCardData` assets.
-- UI and effects subscribe to events instead of polling.
+- UI and effects subscribe to one `OnGameEvent` stream and react only to the event types they care about.
 
 ## Script Layout
 ### Core
 - `Assets/Scripts/Core/DiceRoller.cs`
 - `Assets/Scripts/Core/DiceFaceBuilder.cs`
 - `Assets/Scripts/Core/GameCalculator.cs`
-- `Assets/Scripts/Core/GameEventBus.cs`
 - `Assets/Scripts/Core/GameManager.cs`
+- `Assets/Scripts/Core/EventManager.cs`
+- `Assets/Scripts/Core/GameEvent.cs`
 
 ### Spirit Cards
 - `Assets/Scripts/SpiritCards/SpiritCardData.cs`
@@ -40,15 +42,15 @@ Unity 6 LTS (`6000.0.x`)
 ## Gameplay Flow
 1. `UIRollButton` calls `GameManager.RequestRoll()`.
 2. `GameManager` tells `DiceRoller` to roll if the die is idle.
-3. `DiceRoller` publishes `GameEventBus.RollStarted()`.
+3. `DiceRoller` publishes `RollStartedEvent` through `EventManager.TriggerEvent(...)`.
 4. Roll listeners respond:
    - `CameraShake` shakes the camera.
    - `DiceTrailEffect` enables the trail.
    - `UIRollButton` disables itself.
-5. When the die settles, `DiceRoller` publishes `GameEventBus.RollCompleted(face)`.
-6. `GameCalculator` resets equation state to `Points = face`, `Multiplier = 10`, `Total = Points * Multiplier`.
+5. When the die settles, `DiceRoller` publishes `RollCompletedEvent(face)`.
+6. `GameCalculator` resets equation state to `Points = face`, `Multiplier = 10`, `Total = Points * Multiplier`, then publishes `EquationChangedEvent`.
 7. `GameManager` waits for `spiritCardDelay`, then asks `SpiritCardManager` to evaluate cards.
-8. Matching cards apply effects through `GameCalculator`, and card/result UI updates through bus events.
+8. Matching cards publish `SpiritCardActivatedEvent` or `SpiritCardIdleEvent`, and card/result UI updates from those events.
 
 ## Expected Scene Wiring
 ### Dice
@@ -83,6 +85,7 @@ Inspector assignments:
 - `DiceResultPopup` with a TMP label
 
 ## Notes
-- `GameEventBus` auto-clears static subscribers at subsystem registration to reduce stale event state across play mode reloads.
-- Most runtime scripts now log missing inspector references early to make scene setup mistakes obvious.
+- `EventManager` auto-clears static subscribers at subsystem registration to reduce stale play-mode state.
+- The architecture is intentionally simple: one shared event stream and small event classes.
+- Most runtime scripts log missing inspector references early to make scene setup mistakes obvious.
 - The debug panel only stays active in the editor or development builds.

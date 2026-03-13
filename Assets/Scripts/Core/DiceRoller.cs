@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Realistic physics-based dice roller.
-/// Publishes to GameEventBus; no direct references to any other system.
+/// Publishes events through EventManager; no direct references to any other system.
 ///
 /// Roll sequence:
 ///   1. Spawn above table with random rotation
@@ -11,7 +11,7 @@ using UnityEngine;
 ///   3. Wait until velocity drops below threshold (or timeout)
 ///   4. Read which face is up (dot product against World.up)
 ///   5. Smooth-slerp to clean face orientation
-///   6. Publish GameEventBus.RollCompleted(faceValue)
+///   6. Publish a RollCompletedEvent
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
@@ -86,7 +86,7 @@ public class DiceRoller : MonoBehaviour
     private IEnumerator RollSequence()
     {
         IsRolling = true;
-        GameEventBus.RollStarted();
+        EventManager.TriggerEvent(RollStartedEvent.Instance);
 
         // 1. Teleport above table, random rotation
         _rb.isKinematic = true;
@@ -117,9 +117,9 @@ public class DiceRoller : MonoBehaviour
         }
 
         // 4. Freeze & read face
-        _rb.isKinematic     = true;
         _rb.linearVelocity  = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
+        _rb.isKinematic     = true;
 
         int face = forceResult ? forcedValue : ReadFace();
 
@@ -128,7 +128,7 @@ public class DiceRoller : MonoBehaviour
 
         // 6. Publish result
         IsRolling = false;
-        GameEventBus.RollCompleted(face);
+        EventManager.TriggerEvent(new RollCompletedEvent(face));
     }
 
     // ── Face reading ──────────────────────────────────────────────────────────

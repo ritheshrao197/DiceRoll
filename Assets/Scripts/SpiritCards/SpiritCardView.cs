@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Visual for one Spirit Card. Subscribes to EventBus using its own index.
+/// Visual for one Spirit Card. Subscribes to EventManager using its own index.
 /// No reference to DiceRoller or GameManager needed.
 /// </summary>
 public class SpiritCardView : MonoBehaviour
@@ -42,16 +42,15 @@ public class SpiritCardView : MonoBehaviour
         SetBody(inactiveColor);
     }
 
-    private void OnEnable()
-    {
-        GameEventBus.SubscribeSpiritCardActivated(OnActivated, this);
-        GameEventBus.SubscribeSpiritCardIdle(OnIdle, this);
-    }
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
 
-    private void OnDisable()
+    private void HandleGameEvent(GameEvent evt)
     {
-        GameEventBus.UnsubscribeSpiritCardActivated(OnActivated);
-        GameEventBus.UnsubscribeSpiritCardIdle(OnIdle);
+        if (evt is SpiritCardActivatedEvent activatedEvent)
+            OnActivated(activatedEvent.CardIndex);
+        else if (evt is SpiritCardIdleEvent idleEvent)
+            OnIdle(idleEvent.CardIndex);
     }
 
     private void OnActivated(int idx) { if (idx == cardIndex) Activate(); }

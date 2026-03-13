@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Evaluates all Spirit Cards after each roll.
 /// Uses GameCalculator directly (same GameObject via GetComponent is fine,
-/// or inject via Inspector). Publishes activation/idle events to EventBus.
+/// or inject via Inspector). Publishes activation/idle events through EventManager.
 /// </summary>
 public class SpiritCardManager : MonoBehaviour
 {
@@ -30,11 +30,11 @@ public class SpiritCardManager : MonoBehaviour
             if (cards[i].IsTriggered(diceValue))
             {
                 cards[i].ApplyEffect(calculator);
-                GameEventBus.SpiritCardActivated(i);
+                EventManager.TriggerEvent(new SpiritCardActivatedEvent(i));
             }
             else
             {
-                GameEventBus.SpiritCardIdle(i);
+                EventManager.TriggerEvent(new SpiritCardIdleEvent(i));
             }
         }
     }

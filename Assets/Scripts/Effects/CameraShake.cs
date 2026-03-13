@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>Camera shake on roll start. Subscribes to EventBus.</summary>
+/// <summary>Camera shake on roll start. Subscribes to EventManager.</summary>
 public class CameraShake : MonoBehaviour
 {
     [SerializeField] private float magnitude = 0.08f;
@@ -11,8 +11,14 @@ public class CameraShake : MonoBehaviour
     private Vector3 _origin;
 
     private void Awake()     => _origin = transform.localPosition;
-    private void OnEnable()  => GameEventBus.SubscribeRollStarted(StartShake, this);
-    private void OnDisable() => GameEventBus.UnsubscribeRollStarted(StartShake);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is RollStartedEvent)
+            StartShake();
+    }
 
     private void StartShake() { StopAllCoroutines(); StartCoroutine(Shake()); }
 

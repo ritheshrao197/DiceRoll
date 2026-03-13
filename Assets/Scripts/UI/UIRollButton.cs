@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Roll button. Subscribes to EventBus for rolling state.
+/// Roll button. Subscribes to EventManager for rolling state.
 /// Only direct reference: GameManager (to call RequestRoll).
 /// </summary>
 [RequireComponent(typeof(Button))]
@@ -22,16 +22,15 @@ public class UIRollButton : MonoBehaviour
         _btn.onClick.AddListener(() => gameManager?.RequestRoll());
     }
 
-    private void OnEnable()
-    {
-        GameEventBus.SubscribeRollStarted(OnRollStarted, this);
-        GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
-    }
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
 
-    private void OnDisable()
+    private void HandleGameEvent(GameEvent evt)
     {
-        GameEventBus.UnsubscribeRollStarted(OnRollStarted);
-        GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
+        if (evt is RollStartedEvent)
+            OnRollStarted();
+        else if (evt is RollCompletedEvent)
+            OnRollCompleted(0);
     }
 
     private void OnRollStarted()      => SetState(true);

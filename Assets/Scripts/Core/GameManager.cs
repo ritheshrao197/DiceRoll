@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Coordinates the roll-to-spirit-card evaluation timing.
-/// Subscribes to EventBus. Only direct reference is to DiceRoller (to call Roll()).
+/// Subscribes to EventManager. Only direct reference is to DiceRoller (to call Roll()).
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -19,8 +19,14 @@ public class GameManager : MonoBehaviour
             Debug.LogError("GameManager requires a SpiritCardManager reference.", this);
     }
 
-    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
-    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is RollCompletedEvent rollCompletedEvent)
+            OnRollCompleted(rollCompletedEvent.FaceValue);
+    }
 
     private void OnRollCompleted(int face) =>
         StartCoroutine(DelayedCardEval(face));

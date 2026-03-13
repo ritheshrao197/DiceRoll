@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>Enables trail while rolling. Subscribes to EventBus.</summary>
+/// <summary>Enables trail while rolling. Subscribes to EventManager.</summary>
 [RequireComponent(typeof(TrailRenderer))]
 public class DiceTrailEffect : MonoBehaviour
 {
@@ -19,17 +19,19 @@ public class DiceTrailEffect : MonoBehaviour
         _trail.emitting = false;
     }
 
-    // Named methods so unsubscription actually works (lambdas create new delegates)
-    private void OnEnable()
-    {
-        GameEventBus.SubscribeRollStarted(OnRollStarted, this);
-        GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
-    }
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
 
-    private void OnDisable()
+    private void HandleGameEvent(GameEvent evt)
     {
-        GameEventBus.UnsubscribeRollStarted(OnRollStarted);
-        GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
+        if (evt is RollStartedEvent)
+        {
+            OnRollStarted();
+            return;
+        }
+
+        if (evt is RollCompletedEvent)
+            OnRollCompleted(0);
     }
 
     private void OnRollStarted()        => _trail.emitting = true;

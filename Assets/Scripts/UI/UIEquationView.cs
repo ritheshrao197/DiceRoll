@@ -4,7 +4,7 @@ using TMPro;
 
 /// <summary>
 /// Displays "Points x Multiplier = Total".
-/// Subscribes to GameEventBus.OnEquationChanged with no polling or singleton access.
+/// Subscribes to equation events with no polling or singleton access.
 /// Animates: count-up tween + bounce scale + gold flash on Total.
 /// </summary>
 public class UIEquationView : MonoBehaviour
@@ -38,8 +38,14 @@ public class UIEquationView : MonoBehaviour
         SetImmediate(totalText,      0);
     }
 
-    private void OnEnable() => GameEventBus.SubscribeEquationChanged(OnEquationChanged, this);
-    private void OnDisable() => GameEventBus.UnsubscribeEquationChanged(OnEquationChanged);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is EquationChangedEvent equationChangedEvent)
+            OnEquationChanged(equationChangedEvent.Points, equationChangedEvent.Multiplier, equationChangedEvent.Total);
+    }
 
     // ── Handler ───────────────────────────────────────────────────────────────
 

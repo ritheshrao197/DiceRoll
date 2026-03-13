@@ -11,8 +11,14 @@ public class UIRollHistory : MonoBehaviour
     private readonly List<int> _history = new List<int>(5);
     private readonly System.Text.StringBuilder _builder = new System.Text.StringBuilder(64);
 
-    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(Add, this);
-    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(Add);
+    private void OnEnable()  => EventManager.OnGameEvent += HandleGameEvent;
+    private void OnDisable() => EventManager.OnGameEvent -= HandleGameEvent;
+
+    private void HandleGameEvent(GameEvent evt)
+    {
+        if (evt is RollCompletedEvent rollCompletedEvent)
+            Add(rollCompletedEvent.FaceValue);
+    }
 
     private void Add(int v)
     {
