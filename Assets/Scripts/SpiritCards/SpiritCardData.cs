@@ -41,3 +41,4 @@ public class SpiritCardData : ScriptableObject
 
 public enum SpiritEffectType { SetMultiplier, AddToPoints }
 
+

@@ -19,8 +19,8 @@ public class GameManager : MonoBehaviour
             Debug.LogError("GameManager requires a SpiritCardManager reference.", this);
     }
 
-    private void OnEnable()  => GameEventBus.OnRollCompleted += OnRollCompleted;
-    private void OnDisable() => GameEventBus.OnRollCompleted -= OnRollCompleted;
+    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
+    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
 
     private void OnRollCompleted(int face) =>
         StartCoroutine(DelayedCardEval(face));
@@ -38,3 +38,4 @@ public class GameManager : MonoBehaviour
             diceRoller.Roll();
     }
 }
+

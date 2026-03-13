@@ -11,8 +11,8 @@ public class CameraShake : MonoBehaviour
     private Vector3 _origin;
 
     private void Awake()     => _origin = transform.localPosition;
-    private void OnEnable()  => GameEventBus.OnRollStarted   += StartShake;
-    private void OnDisable() => GameEventBus.OnRollStarted   -= StartShake;
+    private void OnEnable()  => GameEventBus.SubscribeRollStarted(StartShake, this);
+    private void OnDisable() => GameEventBus.UnsubscribeRollStarted(StartShake);
 
     private void StartShake() { StopAllCoroutines(); StartCoroutine(Shake()); }
 
@@ -31,3 +31,4 @@ public class CameraShake : MonoBehaviour
         transform.localPosition = _origin;
     }
 }
+

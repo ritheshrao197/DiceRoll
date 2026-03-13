@@ -34,8 +34,8 @@ public class UIEquationView : MonoBehaviour
         SetImmediate(totalText,      0);
     }
 
-    private void OnEnable() => GameEventBus.OnEquationChanged += OnEquationChanged;
-    private void OnDisable() => GameEventBus.OnEquationChanged -= OnEquationChanged;
+    private void OnEnable() => GameEventBus.SubscribeEquationChanged(OnEquationChanged, this);
+    private void OnDisable() => GameEventBus.UnsubscribeEquationChanged(OnEquationChanged);
 
     // ── Handler ───────────────────────────────────────────────────────────────
 
@@ -96,3 +96,4 @@ public class UIEquationView : MonoBehaviour
         if (label != null) label.text = value.ToString();
     }
 }
+

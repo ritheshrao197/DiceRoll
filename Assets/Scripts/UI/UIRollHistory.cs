@@ -10,8 +10,8 @@ public class UIRollHistory : MonoBehaviour
 
     private readonly Queue<int> _history = new Queue<int>();
 
-    private void OnEnable()  => GameEventBus.OnRollCompleted += Add;
-    private void OnDisable() => GameEventBus.OnRollCompleted -= Add;
+    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(Add, this);
+    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(Add);
 
     private void Add(int v)
     {
@@ -26,3 +26,4 @@ public class UIRollHistory : MonoBehaviour
         if (historyLabel) historyLabel.text = sb.ToString();
     }
 }
+

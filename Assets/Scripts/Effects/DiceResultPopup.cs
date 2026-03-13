@@ -8,8 +8,8 @@ public class DiceResultPopup : MonoBehaviour
     [SerializeField] private TMP_Text label;
 
     private void Start()     { if (label) label.alpha = 0f; }
-    private void OnEnable()  => GameEventBus.OnRollCompleted += Show;
-    private void OnDisable() => GameEventBus.OnRollCompleted -= Show;
+    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(Show, this);
+    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(Show);
 
     private void Show(int v) { StopAllCoroutines(); StartCoroutine(Pop(v)); }
 
@@ -46,3 +46,4 @@ public class DiceResultPopup : MonoBehaviour
         return 1f + c3 * Mathf.Pow(t-1f,3f) + c1 * Mathf.Pow(t-1f,2f);
     }
 }
+

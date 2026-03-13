@@ -44,14 +44,14 @@ public class SpiritCardView : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEventBus.OnSpiritCardActivated += OnActivated;
-        GameEventBus.OnSpiritCardIdle      += OnIdle;
+        GameEventBus.SubscribeSpiritCardActivated(OnActivated, this);
+        GameEventBus.SubscribeSpiritCardIdle(OnIdle, this);
     }
 
     private void OnDisable()
     {
-        GameEventBus.OnSpiritCardActivated -= OnActivated;
-        GameEventBus.OnSpiritCardIdle      -= OnIdle;
+        GameEventBus.UnsubscribeSpiritCardActivated(OnActivated);
+        GameEventBus.UnsubscribeSpiritCardIdle(OnIdle);
     }
 
     private void OnActivated(int idx) { if (idx == cardIndex) Activate(); }
@@ -131,3 +131,4 @@ public class SpiritCardView : MonoBehaviour
         glowBorder.color = c;
     }
 }
+

@@ -22,16 +22,17 @@ public class DiceTrailEffect : MonoBehaviour
     // Named methods so unsubscription actually works (lambdas create new delegates)
     private void OnEnable()
     {
-        GameEventBus.OnRollStarted   += OnRollStarted;
-        GameEventBus.OnRollCompleted += OnRollCompleted;
+        GameEventBus.SubscribeRollStarted(OnRollStarted, this);
+        GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
     }
 
     private void OnDisable()
     {
-        GameEventBus.OnRollStarted   -= OnRollStarted;
-        GameEventBus.OnRollCompleted -= OnRollCompleted;
+        GameEventBus.UnsubscribeRollStarted(OnRollStarted);
+        GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
     }
 
     private void OnRollStarted()        => _trail.emitting = true;
     private void OnRollCompleted(int _) => _trail.emitting = false;
 }
+

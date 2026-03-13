@@ -37,3 +37,4 @@ public class UIDebugPanel : MonoBehaviour
         if (statusLabel) statusLabel.text = "Random";
     }
 }
+

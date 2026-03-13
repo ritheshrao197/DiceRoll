@@ -12,8 +12,8 @@ public class GameCalculator : MonoBehaviour
     public int Multiplier { get; private set; }
     public int Total      { get; private set; }
 
-    private void OnEnable()  => GameEventBus.OnRollCompleted += OnRollCompleted;
-    private void OnDisable() => GameEventBus.OnRollCompleted -= OnRollCompleted;
+    private void OnEnable()  => GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
+    private void OnDisable() => GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
 
     private void OnRollCompleted(int face)
     {
@@ -32,3 +32,4 @@ public class GameCalculator : MonoBehaviour
         GameEventBus.EquationChanged(Points, Multiplier, Total);
     }
 }
+

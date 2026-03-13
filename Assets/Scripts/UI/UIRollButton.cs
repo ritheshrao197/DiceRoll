@@ -24,14 +24,14 @@ public class UIRollButton : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEventBus.OnRollStarted   += OnRollStarted;
-        GameEventBus.OnRollCompleted += OnRollCompleted;
+        GameEventBus.SubscribeRollStarted(OnRollStarted, this);
+        GameEventBus.SubscribeRollCompleted(OnRollCompleted, this);
     }
 
     private void OnDisable()
     {
-        GameEventBus.OnRollStarted   -= OnRollStarted;
-        GameEventBus.OnRollCompleted -= OnRollCompleted;
+        GameEventBus.UnsubscribeRollStarted(OnRollStarted);
+        GameEventBus.UnsubscribeRollCompleted(OnRollCompleted);
     }
 
     private void OnRollStarted()      => SetState(true);
@@ -43,3 +43,4 @@ public class UIRollButton : MonoBehaviour
         if (label) label.text = rolling ? "Rolling..." : "ROLL DICE";
     }
 }
+
