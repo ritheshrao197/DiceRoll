@@ -5,7 +5,7 @@ public static class EventManager
 {
     public static event Action<GameEvent> OnGameEvent;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+   // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetOnLoad() => ClearAll();
 
     public static void TriggerEvent(GameEvent evt)
